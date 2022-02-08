@@ -5,6 +5,7 @@ local vec2 = require("brinevector")
 local bump = require("bump")
 -- local flux = require("flux")
 
+
 -- alias para comodidad
 local lg = love.graphics
 -- table de alamacenaje para conveniencia. se almacena estado dentro
@@ -19,7 +20,6 @@ local function drawCyan(self)
     lg.setColor(0,1,1,1)
     lg.rectangle("fill", self.x, self.y, self.parent.w, self.parent.h)
 end
-
 
 function love.load()
     math.randomseed(os.time())
@@ -54,6 +54,7 @@ function love.load()
     end
 
     my.player = {
+        speed = 200,
         pos = vec2(300,300),
         size = vec2 (32,32),
         center = vec2(16, 16),
@@ -68,6 +69,7 @@ function love.load()
             local goal = self.pos + mov
             self.pos.x, self.pos.y = my.world:move(self, goal.x, goal.y)
         end,
+
     }
 
     local mp = my.player
@@ -93,7 +95,6 @@ function love.load()
 end
 
 function love.update(dt)
-    local speed = 200
 
     -- funcion para leer inputs que se busca leer cuando se dispara el presionado
     local inputs = {}
@@ -112,11 +113,12 @@ function love.update(dt)
     if im.isCodeDown('right') then  mov.x = mov.x + 1 end
     if im.isCodeDown('scale up') then my.cam:scaleLog(dt) end
     if im.isCodeDown('scale down') then if my.cam.scale > 1 then my.cam:scaleLog(-dt) end end
+    if im.isCodeDown('action') then my.player:action() end
 
     -- muevo el jugador y la camara
-    mov = mov.normalized * speed * dt
-    my.player:move(mov)
+    mov = mov.normalized * my.player.speed * dt
     my.cam:lockPosition(my.player.pos.x + my.player.center.x, my.player.pos.y + my.player.center.y, camera.smooth.damped(8))
+    my.player:move(mov)
 end
 
 function love.draw()
