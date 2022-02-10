@@ -5,6 +5,9 @@ local vec2 = require("brinevector")
 local bump = require("bump")
 -- local flux = require("flux")
 
+local __INFO = {
+    version = 0.1
+}
 
 -- alias para comodidad
 local lg = love.graphics
@@ -76,6 +79,7 @@ function love.load()
     my.world:add(mp, mp.pos.x, mp.pos.y, mp.size.x, mp.size.y)
 
     table.insert(my.frontlayer.tiles, my.player)
+
     my.cam = camera(300,300)
 
     -- preparo table de los inputs que usa el juego
@@ -92,6 +96,10 @@ function love.load()
         k = 'cancel',
     }
     im.registerBindings(bindings)
+    my.debuginfo = {}
+    my.addDbInfo = function(callback) table.insert(my.debuginfo, callback) end
+    local a = function(arg1, arg2) return function() return arg1..arg2 end end
+    my.addDbInfo(a("Player speed: ", my.player.speed))
 end
 
 function love.update(dt)
@@ -113,12 +121,20 @@ function love.update(dt)
     if im.isCodeDown('right') then  mov.x = mov.x + 1 end
     if im.isCodeDown('scale up') then my.cam:scaleLog(dt) end
     if im.isCodeDown('scale down') then if my.cam.scale > 1 then my.cam:scaleLog(-dt) end end
-    if im.isCodeDown('action') then my.player:action() end
+    if im.isCodeDown('action') then my.player.speed = my.player.speed + 10 end
 
     -- muevo el jugador y la camara
     mov = mov.normalized * my.player.speed * dt
     my.cam:lockPosition(my.player.pos.x + my.player.center.x, my.player.pos.y + my.player.center.y, camera.smooth.damped(8))
     my.player:move(mov)
+
+end
+
+local function drawStatistics()
+    lg.setColor(1,1,1,1)
+    for index, callback in ipairs(my.debuginfo) do
+        lg.print(callback(), 10, (index-1) * 15 + 10)
+    end
 end
 
 function love.draw()
@@ -126,4 +142,5 @@ function love.draw()
         my.backlayer:draw()
         my.frontlayer:draw()
     my.cam:detach()
+    drawStatistics()
 end
