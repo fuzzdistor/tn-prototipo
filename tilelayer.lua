@@ -4,6 +4,7 @@
 -- you can add nodes by creating a newTileLayer and calling
 -- newNode on it.
 
+local bump = require("bump")
 local lg = love.graphics
 
 local function default_draw(tile)
@@ -18,8 +19,10 @@ end
 return function(cols, rows, width, height, default_color)
     height = height or width
     default_color = default_color or {1,1,1,0.3}
+    local bump_layer = bump.newWorld(64)
     return {
         tiles = {},
+        collision_map = bump_layer,
 
         cols = cols,
         rows = rows,
@@ -45,7 +48,7 @@ return function(cols, rows, width, height, default_color)
             end
         end,
 
-        newTile = function(self,row,col,drawfunc,w,h)
+        newTile = function(self,row,col,drawfunc,w,h,player)
             drawfunc = drawfunc or default_draw
             w = w or self.w
             h = h or self.h
@@ -54,11 +57,12 @@ return function(cols, rows, width, height, default_color)
                 row = row,
                 x = col * w,
                 y = row * h,
-
                 parent = self,
                 draw = drawfunc
             }
             table.insert(self.tiles, tile)
+            player = player or tile
+            self.collision_map:add(player, tile.x, tile.y, tile.parent.w, tile.parent.h)
             return tile
         end,
 

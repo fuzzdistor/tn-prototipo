@@ -41,8 +41,7 @@ function love.load()
             if i == -1 or i == 41 or j == -1 or j == 41 then
                 df = drawCyan
             end
-            local t = my.backlayer:newTile(i, j, df)
-            if df then my.world:add(t, t.x, t.y, t.parent.w, t.parent.h) end
+            my.backlayer:newTile(i, j, df)
         end
     end
 
@@ -52,8 +51,7 @@ function love.load()
         repeat
             x,y = math.random(0,my.backlayer.cols), math.random(0,my.backlayer.rows)
         until my.frontlayer:checkFree(x, y)
-        local t = my.frontlayer:newTile(x, y, drawMagenta)
-        my.world:add(t, t.x, t.y, t.parent.w, t.parent.h)
+        my.frontlayer:newTile(x, y, drawMagenta)
     end
 
     my.player = {
@@ -64,7 +62,7 @@ function love.load()
         parent = my.frontlayer,
         draw = function(self)
             lg.setColor(1,1,0,1)
-            lg.rectangle("fill", my.world:getRect(self))
+            lg.rectangle("fill", bump.getRect(self))
         end,
         move = function(self, mov)
             -- muevo al jugador a una posicion objetivo con world:move. esa
@@ -72,13 +70,9 @@ function love.load()
             local goal = self.pos + mov
             self.pos.x, self.pos.y = my.world:move(self, goal.x, goal.y)
         end,
-
     }
 
-    local mp = my.player
-    my.world:add(mp, mp.pos.x, mp.pos.y, mp.size.x, mp.size.y)
-
-    table.insert(my.frontlayer.tiles, my.player)
+    my.frontlayer:newTile(my.player.pos.x, my.player.pos.y, my.player.draw, my.player.size.x, my.player.size.y, my.player)
 
     my.cam = camera(300,300)
 
@@ -98,8 +92,8 @@ function love.load()
     im.registerBindings(bindings)
     my.debuginfo = {}
     my.addDbInfo = function(callback) table.insert(my.debuginfo, callback) end
-    local a = function(arg1, arg2) return function() return arg1..arg2 end end
-    my.addDbInfo(a("Player speed: ", my.player.speed))
+    my.addDbInfo(function() return "Version "..__INFO.version end)
+    my.addDbInfo(function() return "Player speed: "..my.player.speed end)
 end
 
 function love.update(dt)
@@ -127,7 +121,6 @@ function love.update(dt)
     mov = mov.normalized * my.player.speed * dt
     my.cam:lockPosition(my.player.pos.x + my.player.center.x, my.player.pos.y + my.player.center.y, camera.smooth.damped(8))
     my.player:move(mov)
-
 end
 
 local function drawStatistics()
