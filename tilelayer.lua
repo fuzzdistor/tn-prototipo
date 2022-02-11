@@ -48,6 +48,12 @@ return function(cols, rows, width, height, default_color)
             end
         end,
 
+        addPlayer = function(self, pl)
+	    pl.parent = self
+            table.insert(self.tiles, pl)
+            self.collision_map:add(pl, pl.pos.x, pl.pos.y, pl.size.x, pl.size.y)
+        end,
+
         newTile = function(self,row,col,drawfunc,w,h,player)
             drawfunc = drawfunc or default_draw
             w = w or self.w

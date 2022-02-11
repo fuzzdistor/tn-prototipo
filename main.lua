@@ -2,7 +2,6 @@ local newTileLayer = require("tilelayer")
 local im = require("InputManager")
 local camera = require("camera")
 local vec2 = require("brinevector")
-local bump = require("bump")
 -- local flux = require("flux")
 
 local __INFO = {
@@ -27,21 +26,14 @@ end
 function love.load()
     math.randomseed(os.time())
 
-    -- creo una capa de colisiones
-    my.world = bump.newWorld(64)
-
     -- crear TileLayers (columnas, filas, ancho de celda, alto de celta [= alto de celda])
-    my.backlayer = newTileLayer(40, 30, 40)
-    my.frontlayer = newTileLayer(50, 10, 40)
+    my.backlayer = newTileLayer(40, 40, 40)
+    my.frontlayer = newTileLayer(40, 40, 40)
 
     -- creo un grid en el backlayer
-    for i = -1, 41 do
-        for j = -1, 41 do
-            local df = nil
-            if i == -1 or i == 41 or j == -1 or j == 41 then
-                df = drawCyan
-            end
-            my.backlayer:newTile(i, j, df)
+    for i = 0, 40 do
+        for j = 0, 40 do
+            my.backlayer:newTile(i, j)
         end
     end
 
@@ -53,26 +45,31 @@ function love.load()
         until my.frontlayer:checkFree(x, y)
         my.frontlayer:newTile(x, y, drawMagenta)
     end
+    for i = -1, 41 do
+	my.frontlayer:newTile(i, -1, drawCyan)
+	my.frontlayer:newTile(-1, i, drawCyan)
+	my.frontlayer:newTile(41, i, drawCyan)
+	my.frontlayer:newTile(i, 41, drawCyan)
+    end
 
     my.player = {
         speed = 200,
         pos = vec2(300,300),
         size = vec2 (32,32),
         center = vec2(16, 16),
-        parent = my.frontlayer,
         draw = function(self)
             lg.setColor(1,1,0,1)
-            lg.rectangle("fill", bump.getRect(self))
+	    lg.rectangle("fill", self.parent.collision_map:getRect(self))
         end,
         move = function(self, mov)
             -- muevo al jugador a una posicion objetivo con world:move. esa
             -- funcion devuelve la posicion real teniendo en cuenta colisiones
             local goal = self.pos + mov
-            self.pos.x, self.pos.y = my.world:move(self, goal.x, goal.y)
+            self.pos.x, self.pos.y = self.parent.collision_map:move(self, goal.x, goal.y)
         end,
     }
 
-    my.frontlayer:newTile(my.player.pos.x, my.player.pos.y, my.player.draw, my.player.size.x, my.player.size.y, my.player)
+    my.frontlayer:addPlayer(my.player)
 
     my.cam = camera(300,300)
 
